@@ -1,0 +1,16 @@
+mouse controls
+--------------------------------
+
+right click and drag to view 3d scene
+
+
+keyboard shortcuts
+-------------------------------
+
+w - move forward
+s - move backward
+a - move left
+d - move right
+
+b - gravity on
+m - to hide all GUI
