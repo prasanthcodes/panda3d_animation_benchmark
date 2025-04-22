@@ -6,11 +6,8 @@ from panda3d.core import LVector3
 from direct.actor.Actor import Actor
 from direct.task.Task import Task
 from direct.gui.OnscreenText import OnscreenText
-from direct.gui.OnscreenImage import OnscreenImage
 from direct.showbase.DirectObject import DirectObject
 from direct.gui.DirectGui import *
-from panda3d.core import Texture, TexturePool, LoaderOptions, TextureStage, TexGenAttrib, TransformState
-from direct.filter.FilterManager import FilterManager
 
 import random
 import sys
@@ -19,20 +16,11 @@ import shutil
 import math
 from direct.filter.CommonFilters import CommonFilters
 from panda3d.core import ClockObject
-
 from panda3d.core import *
-from panda3d.core import SamplerState
-import tkinter
-from tkinter.filedialog import askopenfilename
-from tkinter import messagebox
-import tkinter as tk
+
 
 import simplepbr
 import gltf
-
-import json
-import datetime
-import time
 
 
 panda3d.core.load_prc_file_data("", """
@@ -61,6 +49,8 @@ panda3d.core.load_prc_file_data('', 'show-frame-rate-meter true')
 loadPrcFileData("", "basic-shaders-only #t")
 #loadPrcFileData("", "gl-version 3 2")
 #loadPrcFileData("", "notify-level-glgsg debug")
+#loadPrcFileData("", "win-size 1920 1080")
+
 class LookingDemo(ShowBase):
 
     def __init__(self):
@@ -77,7 +67,6 @@ class LookingDemo(ShowBase):
         self.animation_on_flag=False#False
         self.shadow_on_flag=True
         
-
         # Camera param initializations
         self.cameraHeight = 1.5     # camera Height above ground
         self.cameraAngleH = 0     # Horizontal angle (yaw)
@@ -104,12 +93,9 @@ class LookingDemo(ShowBase):
         taskMgr.add(self.camera_rotate, "camera_rotateTask")
         taskMgr.add(self.camera_move, "camera_move")
         #self.sun_rotate()
-
-        self.textObject = OnscreenText(text='', pos=(-0.1, 0.95), scale=0.07,bg=(0,0,0,0.5),fg=(1,1,1,1))
         
         base.accept('tab', base.bufferViewer.toggleEnable)
 
-        self.temp_count=1
         self.create_top_level_main_gui()
         #self.hide_top_level_main_gui()
 
@@ -128,18 +114,12 @@ class LookingDemo(ShowBase):
         
     
     def show_top_level_main_gui(self):
-        self.menu_1.show()
-        self.menu_2.show()
         self.MenuButton_1.show()
-        self.dlabel_status.show()
-        self.dlabel_status2.show()
+        self.bottom_cam_label.show()
         
     def hide_top_level_main_gui(self):
-        self.menu_1.hide()
-        self.menu_2.hide()
         self.MenuButton_1.hide()
-        self.dlabel_status.hide()
-        self.dlabel_status2.hide()                                                                                         
+        self.bottom_cam_label.hide()                                                                                       
 
     def create_dropdown_main_menu(self):
         self.menu_dropdown_1=DirectScrolledFrame(
@@ -422,7 +402,7 @@ class LookingDemo(ShowBase):
             cur_color=self.dlight1.getPos()
             self.dlight1.setPos(cur_color[0],cur_color[1],float(textEntered))
         except ValueError:
-            print('value entered in entry is not number')            
+            print('value entered in entry is not number')
 
 
     def focusInDef(self):
@@ -434,6 +414,12 @@ class LookingDemo(ShowBase):
         pass
 
     def ButtonDef_a4(self):
+        try:
+            textEntered=self.dentry_a2.get()
+            self.N_trees=int(textEntered)
+            self.dentry_a2['focus']=0
+        except:
+            print('entry1 error')
         self.load_environment_models()
 
     def menubuttonDef_1(self):
@@ -514,7 +500,6 @@ class LookingDemo(ShowBase):
         self.dlight1.setHpr(0, -45, 0)
         self.dlight1.setPos(0,0,20)
                      
-
         self.dlight1.node().get_lens().set_film_size(50, 50)
         self.dlight1.node().get_lens().setNearFar(1, 50)
         self.dlight1.node().show_frustum()
@@ -580,14 +565,6 @@ class LookingDemo(ShowBase):
         self.bottom_cam_label.setText('CamPos: %0.2f,%0.2f,%0.2f'%(newval_2,newval_1,newval_3))
         return Task.cont
 
-    def get_an_point_front_of_camera(self,distance,H,P):
-        pos_val=self.camera.getPos()
-        heading=(math.pi*(H))/180
-        pitch=(math.pi*(P))/180
-        newval_1=pos_val[1]+distance*math.cos(heading)*math.cos(pitch)
-        newval_2=pos_val[0]-distance*math.sin(heading)*math.cos(pitch)
-        newval_3=pos_val[2]+distance*math.sin(pitch)
-        return [newval_2,newval_1,newval_3]
 
 
 demo=LookingDemo()
