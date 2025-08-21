@@ -24,3 +24,4 @@ vertices: 53868
 triangles: 54648
 number of animation frames: 250
 animation time: 10 sec
+
