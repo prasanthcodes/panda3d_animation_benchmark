@@ -499,11 +499,12 @@ class LookingDemo(ShowBase):
                 self.placeholder.setPos(30-random.random()*60,30-random.random()*60,0)
                 self.current_actor.instanceTo(self.placeholder)
         if self.current_choice==2:
+            self.cleanup_all()
             # An array for two matrices.
-            instanced_array = PTA_LMatrix4f.emptyArray(2)
+            instanced_array = PTA_LMatrix4f.emptyArray(1)
 
             # Creating a transformation for 1 copy.
-            scale = LMatrix4f().scale_mat((1, 1, 1.5))
+            scale = LMatrix4f().scale_mat((1, 1, 1))
             rotate_x = LMatrix4f().rotate_mat(0, (1, 0, 0))
             rotate_y = LMatrix4f().rotate_mat(0, (0, 1, 0))
             rotate_z = LMatrix4f().rotate_mat(45, (0, 0, 1))
@@ -513,28 +514,18 @@ class LookingDemo(ShowBase):
             # Add the transformation matrix for 1 copy to the array.
             instanced_array.set_element(0, transform)
 
-            # Creating a transformation for 2 copy.
-            scale = LMatrix4f().scale_mat((1, 1, 1))
-            rotate_x = LMatrix4f().rotate_mat(0, (1, 0, 0))
-            rotate_y = LMatrix4f().rotate_mat(0, (0, 1, 0))
-            rotate_z = LMatrix4f().rotate_mat(0, (0, 0, 1))
-            translate = LMatrix4f().translate_mat((10, 10, 0))
 
-            transform = scale * ( rotate_y * rotate_x * rotate_z) * translate
-            # Add the transformation matrix for 2 copy to the array.
-            instanced_array.set_element(1, transform)
-
-            self.model = Actor('panda', {'walk' : 'panda-walk'})
-            self.model.loop('walk')
+            self.current_actor = Actor(self.model_tree)
+            self.current_actor.loop('Action')
             # A hack to disable culling.
-            self.model.node().set_bounds(OmniBoundingVolume())
-            self.model.node().set_final(True)
-            self.model.reparent_to(render)
+            self.current_actor.node().set_bounds(OmniBoundingVolume())
+            self.current_actor.node().set_final(True)
+            self.current_actor.reparent_to(render)
             # We inform the GPU that this geometry needs to be drawn in multiples of the specified number.
-            self.model.set_instance_count(2)
-            self.model.set_shader(Shader.load(Shader.SL_GLSL, vertex = 'shaders/instancing_vertex.glsl', fragment = 'shaders/instancing_fragment.glsl'))
+            self.current_actor.set_instance_count(2)
+            self.current_actor.set_shader(Shader.load(Shader.SL_GLSL, vertex = 'shaders/instancing_vertex.glsl', fragment = 'shaders/instancing_fragment.glsl'))
             # Passing an array of two matrices to the shader.
-            self.model.set_shader_input("instanced_object", ShaderBuffer('DataBuffer', StringStream(instanced_array).get_data(), GeomEnums.UH_static))
+            self.current_actor.set_shader_input("instanced_object", ShaderBuffer('DataBuffer', StringStream(instanced_array).get_data(), GeomEnums.UH_static))
     
 
                 
