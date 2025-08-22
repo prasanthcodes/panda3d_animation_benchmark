@@ -83,6 +83,11 @@ class LookingDemo(ShowBase):
         self.custom_parent = NodePath("custom_parent")
         self.model_instances=[]
         self.animation_instances=[]
+        self.choice_var=[0]
+        self.current_choice=0
+        self.current_actor=None
+        self.current_animation=None
+        self.placeholder=None
         #---display camera pos at bottom---
         self.bottom_cam_label=DirectLabel(text='CamPos: ',pos=(-1,1,-0.9),scale=0.05,text_align=TextNode.ACenter,text_fg=(1, 1, 1, 0.8),text_bg=(0,0,0,0.2),frameColor=(0, 0, 0, 0.1))
         
@@ -164,6 +169,9 @@ class LookingDemo(ShowBase):
             indicatorValue=0
             )
         
+    def setChoice(self):
+        self.current_choice=self.choice_var[0]
+
     def create_parameters_gui(self):
         self.ScrolledFrame_a1=DirectScrolledFrame(
             canvasSize=(-2, 2, -2, 2),  # left, right, bottom, top
@@ -175,7 +183,15 @@ class LookingDemo(ShowBase):
         self.dlabel_a1 = DirectLabel(parent=canvas_1,text='Number of objects: ',pos=(-0.8,1,0.75),scale=0.06,text_align=TextNode.ACenter,text_fg=(1, 1, 1, 0.9),text_bg=(0,0,0,0.3),frameColor=(0, 0, 0, 0.2))
         self.dentry_a2 = DirectEntry(parent=canvas_1,text = "", scale=0.06,width=10,pos=(-0.4, 1,0.75), command=self.SetEntryText_a2,initialText="1", numLines = 1, focus=0,frameColor=(0,0,0,0.3),text_fg=(1, 1, 1, 0.9),focusInCommand=self.focusInDef,focusOutCommand=self.focusOutDef)
         self.CheckButton_a3 = DirectCheckButton(parent=canvas_1,text = "enable animation" ,scale=.06,command=self.cbuttondef_a3,pos=(-0.3, 1,0.65),frameColor=(0, 0, 0, 0.4),text_fg=(1, 1, 1, 0.9),text_align=TextNode.ALeft)
-        self.dbutton_a4 = DirectButton(parent=canvas_1,text=("Set"),scale=.06, pos=(-0.3, 1,0.55),command=self.ButtonDef_a4)
+        self.CheckButton_a3_2 = DirectLabel(parent=canvas_1,text = "Select an Instancing Method:" ,scale=.06,pos=(-0.35, 1,0.55),frameColor=(0, 0, 0, 0.4),text_fg=(0.7, 0.7, 1, 0.9),text_align=TextNode.ALeft)
+        self.dbuttons_a3_2 = [
+            DirectRadioButton(parent=canvas_1,text='No Instancing',         variable=self.choice_var, value=[0],scale=0.06, pos=(-0.3, 1,0.45), command=self.setChoice,frameColor=(0, 0, 0, 0.4),text_fg=(1, 1, 1, 0.9),text_align=TextNode.ALeft),
+            DirectRadioButton(parent=canvas_1,text='Instancing',            variable=self.choice_var, value=[1],scale=0.06, pos=(-0.3, 1,0.35), command=self.setChoice,frameColor=(0, 0, 0, 0.4),text_fg=(1, 1, 1, 0.9),text_align=TextNode.ALeft),
+            DirectRadioButton(parent=canvas_1,text='Hardware Instancing',   variable=self.choice_var, value=[2],scale=0.06, pos=(-0.3, 1,0.25), command=self.setChoice,frameColor=(0, 0, 0, 0.4),text_fg=(1, 1, 1, 0.9),text_align=TextNode.ALeft)
+        ]
+        for button in self.dbuttons_a3_2:
+            button.setOthers(self.dbuttons_a3_2)
+        self.dbutton_a4 = DirectButton(parent=canvas_1,text=("Set"),scale=.06, pos=(-0.3, 1,0.15),command=self.ButtonDef_a4)
         
         
     def create_daylight_gui(self):
@@ -255,6 +271,7 @@ class LookingDemo(ShowBase):
             self.animation_on_flag=True
         else:
             self.animation_on_flag=False
+            
             
     def cbuttondef_b3(self,status):
         if status:
@@ -428,8 +445,9 @@ class LookingDemo(ShowBase):
         else:
             self.menu_dropdown_1.hide()
 
-        
-    def load_environment_models(self):
+
+    def cleanup_all(self):
+        #---choice 0 cleanup---
         if self.custom_parent.getNumChildren() > 0:
             for child in self.custom_parent.getChildren():
                 child.removeNode()
@@ -441,18 +459,84 @@ class LookingDemo(ShowBase):
             
         self.model_instances=[]
         self.animation_instances=[]
-        for i in range(self.N_trees):
-            #copied_model_0=loader.loadModel('tree_1/Tree_1.gltf')
-            copied_model_0=self.model_tree.copyTo(self.custom_parent)
-            copied_model = Actor(copied_model_0)
-            copied_model.reparentTo(self.render)
-            copied_model.setPos(30-random.random()*60,30-random.random()*60,0)
-            self.model_instances.append(copied_model)
-        if self.animation_on_flag:
-            for mdl in self.model_instances:
-                self.animation1 = mdl.getAnimControl('Action')
-                self.animation_instances.append(self.animation1)
-                self.animation_instances[-1].loop(0)
+        
+        #---choice 1 cleanup---
+        #self.current_actor=None
+        #self.current_animation=None
+        #self.placeholder=None
+        # Later, to clean up
+        if self.placeholder is not None:
+            self.placeholder.removeNode()
+            self.placeholder.clear()
+        if self.current_actor is not None:
+            self.current_actor.cleanup()
+            self.current_actor.removeNode()
+    
+    def load_environment_models(self):
+        if self.current_choice==0:
+            self.cleanup_all()
+            for i in range(self.N_trees):
+                #copied_model_0=loader.loadModel('tree_1/Tree_1.gltf')
+                copied_model_0=self.model_tree.copyTo(self.custom_parent)
+                copied_model = Actor(copied_model_0)
+                copied_model.reparentTo(self.render)
+                copied_model.setPos(30-random.random()*60,30-random.random()*60,0)
+                self.model_instances.append(copied_model)
+            if self.animation_on_flag:
+                for mdl in self.model_instances:
+                    self.animation1 = mdl.getAnimControl('Action')
+                    self.animation_instances.append(self.animation1)
+                    self.animation_instances[-1].loop(0)
+        if self.current_choice==1:
+            self.cleanup_all()
+            
+            if self.animation_on_flag:
+                self.current_actor = Actor(self.model_tree)
+                self.current_animation=self.current_actor.getAnimControl('Action')
+                self.current_animation.loop(0)
+            for i in range(self.N_trees):
+                self.placeholder = render.attachNewNode("Tree_placeholder")
+                self.placeholder.setPos(30-random.random()*60,30-random.random()*60,0)
+                self.current_actor.instanceTo(self.placeholder)
+        if self.current_choice==2:
+            # An array for two matrices.
+            instanced_array = PTA_LMatrix4f.emptyArray(2)
+
+            # Creating a transformation for 1 copy.
+            scale = LMatrix4f().scale_mat((1, 1, 1.5))
+            rotate_x = LMatrix4f().rotate_mat(0, (1, 0, 0))
+            rotate_y = LMatrix4f().rotate_mat(0, (0, 1, 0))
+            rotate_z = LMatrix4f().rotate_mat(45, (0, 0, 1))
+            translate = LMatrix4f().translate_mat((0, 0, -1))
+
+            transform = scale * ( rotate_y * rotate_x * rotate_z) * translate
+            # Add the transformation matrix for 1 copy to the array.
+            instanced_array.set_element(0, transform)
+
+            # Creating a transformation for 2 copy.
+            scale = LMatrix4f().scale_mat((1, 1, 1))
+            rotate_x = LMatrix4f().rotate_mat(0, (1, 0, 0))
+            rotate_y = LMatrix4f().rotate_mat(0, (0, 1, 0))
+            rotate_z = LMatrix4f().rotate_mat(0, (0, 0, 1))
+            translate = LMatrix4f().translate_mat((10, 10, 0))
+
+            transform = scale * ( rotate_y * rotate_x * rotate_z) * translate
+            # Add the transformation matrix for 2 copy to the array.
+            instanced_array.set_element(1, transform)
+
+            self.model = Actor('panda', {'walk' : 'panda-walk'})
+            self.model.loop('walk')
+            # A hack to disable culling.
+            self.model.node().set_bounds(OmniBoundingVolume())
+            self.model.node().set_final(True)
+            self.model.reparent_to(render)
+            # We inform the GPU that this geometry needs to be drawn in multiples of the specified number.
+            self.model.set_instance_count(2)
+            self.model.set_shader(Shader.load(Shader.SL_GLSL, vertex = 'shaders/instancing_vertex.glsl', fragment = 'shaders/instancing_fragment.glsl'))
+            # Passing an array of two matrices to the shader.
+            self.model.set_shader_input("instanced_object", ShaderBuffer('DataBuffer', StringStream(instanced_array).get_data(), GeomEnums.UH_static))
+    
+
                 
     def set_keymap(self):
         self.keyMap = {"move_forward": 0, "move_backward": 0, "move_left": 0, "move_right": 0,"gravity_on":1,"show_gui":1,"right_click":0}
