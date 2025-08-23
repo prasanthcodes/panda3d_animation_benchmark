@@ -20,7 +20,7 @@ from panda3d.core import *
 
 
 import simplepbr
-import gltf
+#import gltf
 
 
 panda3d.core.load_prc_file_data("", """
@@ -468,9 +468,11 @@ class LookingDemo(ShowBase):
         if self.placeholder is not None:
             self.placeholder.removeNode()
             self.placeholder.clear()
+            self.placeholder=None
         if self.current_actor is not None:
             self.current_actor.cleanup()
             self.current_actor.removeNode()
+            self.current_actor=None
     
     def load_environment_models(self):
         if self.current_choice==0:
@@ -490,8 +492,8 @@ class LookingDemo(ShowBase):
         if self.current_choice==1:
             self.cleanup_all()
             
+            self.current_actor = Actor(self.model_tree)
             if self.animation_on_flag:
-                self.current_actor = Actor(self.model_tree)
                 self.current_animation=self.current_actor.getAnimControl('Action')
                 self.current_animation.loop(0)
             for i in range(self.N_trees):
@@ -500,34 +502,37 @@ class LookingDemo(ShowBase):
                 self.current_actor.instanceTo(self.placeholder)
         if self.current_choice==2:
             self.cleanup_all()
-            # An array for two matrices.
-            instanced_array = PTA_LMatrix4f.emptyArray(1)
+            
+            # An array for N matrices.
+            instanced_array = PTA_LMatrix4f.emptyArray(self.N_trees)
+            for i in range(self.N_trees):
+                # Creating a transformation for 1 copy.
+                scale = LMatrix4f().scale_mat((1, 1, 1))
+                rotate_x = LMatrix4f().rotate_mat(0, (1, 0, 0))
+                rotate_y = LMatrix4f().rotate_mat(0, (0, 1, 0))
+                #rotate_z = LMatrix4f().rotate_mat(45, (0, 0, 1))
+                rotate_z = LMatrix4f().rotate_mat(0, (0, 0, 1))
+                x_rand=int(30-random.random()*60)
+                y_rand=int(30-random.random()*60)
+                translate = LMatrix4f().translate_mat((x_rand, y_rand, 0))
 
-            # Creating a transformation for 1 copy.
-            scale = LMatrix4f().scale_mat((1, 1, 1))
-            rotate_x = LMatrix4f().rotate_mat(0, (1, 0, 0))
-            rotate_y = LMatrix4f().rotate_mat(0, (0, 1, 0))
-            rotate_z = LMatrix4f().rotate_mat(45, (0, 0, 1))
-            translate = LMatrix4f().translate_mat((0, 0, -1))
-
-            transform = scale * ( rotate_y * rotate_x * rotate_z) * translate
-            # Add the transformation matrix for 1 copy to the array.
-            instanced_array.set_element(0, transform)
-
+                transform = scale * ( rotate_y * rotate_x * rotate_z) * translate
+                # Add the transformation matrix for i th copy to the array.
+                instanced_array.set_element(i, transform)
 
             self.current_actor = Actor(self.model_tree)
-            self.current_actor.loop('Action')
+            if self.animation_on_flag:
+                self.current_animation=self.current_actor.getAnimControl('Action')
+                self.current_animation.loop(0)
             # A hack to disable culling.
             self.current_actor.node().set_bounds(OmniBoundingVolume())
             self.current_actor.node().set_final(True)
             self.current_actor.reparent_to(render)
             # We inform the GPU that this geometry needs to be drawn in multiples of the specified number.
-            self.current_actor.set_instance_count(2)
+            self.current_actor.set_instance_count(self.N_trees)
             self.current_actor.set_shader(Shader.load(Shader.SL_GLSL, vertex = 'shaders/instancing_vertex.glsl', fragment = 'shaders/instancing_fragment.glsl'))
             # Passing an array of two matrices to the shader.
             self.current_actor.set_shader_input("instanced_object", ShaderBuffer('DataBuffer', StringStream(instanced_array).get_data(), GeomEnums.UH_static))
-    
-
                 
     def set_keymap(self):
         self.keyMap = {"move_forward": 0, "move_backward": 0, "move_left": 0, "move_right": 0,"gravity_on":1,"show_gui":1,"right_click":0}
