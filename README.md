@@ -1,5 +1,5 @@
 # panda3d animation benchmark
-### Run this code and set the number of objects to find out the performance of animations in your machine.
+### Run the code. Set the number of objects. Check the FPS.
 
 ![Screenshot of window](Screenshot.jpg)
 
