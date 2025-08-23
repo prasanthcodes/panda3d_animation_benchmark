@@ -1,14 +1,14 @@
-# panda3d animation benchmark
+# Panda3D Animation Benchmark
 ### Run the code. Set the number of objects. Check the FPS.
 
 ![Screenshot of window](Screenshot.jpg)
 
-## shortcuts
+## Shortcuts
 
-### mouse controls
+### Mouse controls
 right click and drag to view 3d scene
 
-### keyboard shortcuts
+### Keyboard Shortcuts
 
 w - move forward <br/>
 s - move backward <br/>
