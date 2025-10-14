@@ -57,6 +57,7 @@ class LookingDemo(ShowBase):
         ShowBase.__init__(self)
 
         self.disable_mouse()
+        self.props = WindowProperties()                               
                                           
         self.pipeline = simplepbr.init(use_normal_maps=True,exposure=0.8,sdr_lut_factor=0,max_lights=8)
         #---adjustable parameters---
@@ -74,6 +75,7 @@ class LookingDemo(ShowBase):
         self.camLens.setNear(0.01)
         self.camLens.setFar(1500)
         self.camera.setPos(0,0,1)
+        self.mouse_rotate_flag=0                        
 
         
         self.model_ground=loader.loadModel('grass_ground_1.glb')
@@ -590,16 +592,23 @@ class LookingDemo(ShowBase):
         # Check to make sure the mouse is readable
         if self.mouseWatcherNode.hasMouse():
             if self.keyMap['right_click']==True:
+                # get the mouse position as a LVector2. The values for each axis are from -1 to
+                # 1. The top-left is (-1,-1), the bottom right is (1,1)
                 mpos = self.mouseWatcherNode.getMouse()
+                if self.mouse_rotate_flag==0:
+                    self.props.setCursorHidden(True)
+                    self.win.requestProperties(self.props)
+                    self.win.movePointer(0, int(self.win.getXSize() / 2), int(self.win.getYSize() / 2))
+                    self.mouse_rotate_flag=1
                 mouse = self.win.getPointer(0)
                 mx, my = mouse.getX(), mouse.getY()
                 # Reset mouse to center to prevent edge stopping
-                self.win.movePointer(0, int(800 / 2), int(600 / 2))
-                #self.win.movePointer(0, int(self.win.getXSize() / 2), int(self.win.getYSize() / 2))
+                                                                   
+                self.win.movePointer(0, int(self.win.getXSize() / 2), int(self.win.getYSize() / 2))
 
                 # Calculate mouse delta
-                dx = mx - 800 / 2
-                dy = my - 600 / 2
+                dx = mx - int(self.win.getXSize() / 2)
+                dy = my - int(self.win.getYSize() / 2)
 
                 # Update camera angles based on mouse movement
                 self.cameraAngleH -= dx * self.mouse_sensitivity * globalClock.getDt()
@@ -611,6 +620,10 @@ class LookingDemo(ShowBase):
                 #self.camera.setPos(camX, camY, camZ)
                 self.camera.setHpr(self.cameraAngleH, self.cameraAngleP, 0)
 
+            else:
+                self.mouse_rotate_flag=0
+                self.props.setCursorHidden(False)
+                self.win.requestProperties(self.props)
         return Task.cont  # Task continues infinitely
 
     def sun_rotate(self):
